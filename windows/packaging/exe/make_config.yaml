@@ -1,0 +1,8 @@
+app_id: f70c09d2-ec8a-4182-9d40-cec30648e9ca
+publisher: Joka03J
+publisher_url: https://github.com/Jokay03J/mocker
+display_name: Mocker
+create_desktop_icon: true
+install_dir_name: MOCKER
+locales:
+  - fr

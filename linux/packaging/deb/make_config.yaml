@@ -1,0 +1,19 @@
+display_name: Mocker
+package_name: mocker
+maintainer:
+  name: Jokay03J
+priority: optional
+section: x11
+installed_size: 6604
+essential: false
+icon: lib/asset/logo.png
+
+keywords:
+  - Application
+
+generic_name: Mock an api app
+
+categories:
+  - Development
+
+startup_notify: true
