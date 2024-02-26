@@ -4,7 +4,7 @@ on:
   
 jobs:
   release-linux:
-    name: Run npm on Ubuntu
+    name: Build Linux app
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,4 +26,4 @@ jobs:
 
           # A file, directory or wildcard pattern that describes what to upload
           # Required.
-          path: build/linux/x64/release/bundle/linux_x64.zip
+          path: ./linux_x64.zip
