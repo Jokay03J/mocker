@@ -16,15 +16,38 @@ jobs:
       - run: flutter --version
       - run: sudo apt-get update -y
       - run: sudo apt-get install -y ninja-build libgtk-3-dev
-      - run: flutter build linux --release
-      - run: cd build/linux/x64/release/bundle
-      - run: zip linux_x64 ./ -r
+      - run: dart pub global activate flutter_distributor
+      - run: flutter_distributor release --name build-linux
       - uses: actions/upload-artifact@v4
         with:
-          # Name of the artifact to upload.
-          # Optional. Default is 'artifact'
           name: mocker_linux_x64.zip
-
-          # A file, directory or wildcard pattern that describes what to upload
-          # Required.
-          path: ./build/linux/x64/release/bundle/linux_x64.zip
+          path: ./dist/**/*-linux.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mocker_linux_x64.deb
+          path: ./dist/**/*.deb
+  release-windows:
+    name: Build Windows app
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.x'
+          channel: 'stable'
+          cache: true
+      - run: flutter --version
+      - run: dart pub global activate flutter_distributor
+      - run: flutter_distributor release --name build-windows
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mocker_windows_x64.zip
+          path: ./dist/**/*-windows.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mocker_windows_x64.exe
+          path: ./dist/**/*.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mocker_windows_x64.msix
+          path: ./dist/**/*.msix
