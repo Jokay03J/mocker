@@ -41,11 +41,9 @@ jobs:
       - run: flutter_distributor release --name build-windows
       - uses: actions/upload-artifact@v4
         with:
-          name: mocker_windows_x64_exe.zip
-          path: |
-            ./build/windows/x64/runner/Release/**/*.exe
-            ./build/windows/x64/runner/Release/**/*.dll
-      - uses: actions/upload-artifact@v4
-        with:
           name: mocker_windows_x64_zip.zip
           path: ./dist/**/*-windows.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mocker_windows_x64_setup.exe
+          path: ./dist/**/*-windows-setup.exe
