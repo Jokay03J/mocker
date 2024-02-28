@@ -65,6 +65,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WidgetsApp.router(
+      restorationScopeId: 'mocker',
       color: Colors.pimary,
       title: 'Mocker',
       routerConfig: _router,
