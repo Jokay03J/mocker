@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:alfred/alfred.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:logging/logging.dart';
+import 'package:mocker/shared/types.dart';
 
 Future<Alfred> startServer() async {
   final app = Alfred();
@@ -62,16 +65,13 @@ Future<Alfred> startServer() async {
       await res.json({'id': id, ...box.read<Map>(id)!});
     });
 
-    app.post(
-      '/${modelNames[index]}',
-      (req, res) async {
-        final body = await req.bodyAsJsonMap;
-        final id = DateTime.now().millisecondsSinceEpoch.toString();
-        await box.write(id, body);
-        res.statusCode = 201;
-        await res.json({'id': id, ...body});
-      },
-    );
+    app.post('/${modelNames[index]}', (req, res) async {
+      final body = await req.bodyAsJsonMap;
+      final id = DateTime.now().millisecondsSinceEpoch.toString();
+      await box.write(id, body);
+      res.statusCode = 201;
+      await res.json({'id': id, ...body});
+    }, middleware: [((req, res) => validate(req, res, modelNames[index]))]);
 
     app.put('/${modelNames[index]}/:id', (req, res) async {
       final id = req.params['id'];
@@ -81,12 +81,11 @@ Future<Alfred> startServer() async {
         return;
       }
       Map? data = box.read<Map>(id);
-      // TODO: make validation
       final body = await req.bodyAsJsonMap;
       final bodyFinal = {...data!, ...body};
       await box.write(id, bodyFinal);
       await res.json({'id': id, ...bodyFinal});
-    });
+    }, middleware: [(req, res) => validate(req, res, modelNames[index])]);
 
     app.delete('/${modelNames[index]}/:id', (req, res) async {
       final id = req.params['id'];
@@ -101,4 +100,49 @@ Future<Alfred> startServer() async {
 
   await app.listen(3000);
   return app;
+}
+
+FutureOr validate(HttpRequest req, HttpResponse res, String modelName) async {
+  final box = GetStorage();
+  if (!box.hasData(modelName)) {
+    res.statusCode = 401;
+    await res
+        .json({'error': true, 'message': 'The model must have one property'});
+  }
+  final body = await req.bodyAsJsonMap;
+  final modelKeys = box.getKeys<Iterable>().toList();
+  final modelData = box.read<Map<String, dynamic>>(modelName);
+
+  for (final propertyName in body.keys) {
+    // check if property name exist on model property
+    final keysExist = modelKeys.contains(propertyName);
+    if (!keysExist) {
+      res.statusCode = 400;
+      await res.json({
+        'error': true,
+        'message': "$propertyName property doesn't exist on model !"
+      });
+      break;
+    }
+    // check type body property value
+    final propertyValue = body[propertyName];
+    switch (modelData![propertyName]) {
+      case Types.number:
+        if (propertyValue is! int || propertyValue is! double) {
+          res.statusCode = 400;
+          await res.json(
+              {'error': true, 'message': '$propertyName must be a number'});
+          break;
+        }
+        break;
+      case Types.string:
+        if (propertyValue is! String) {
+          res.statusCode = 400;
+          await res.json(
+              {'error': true, 'message': '$propertyName must be a string'});
+          break;
+        }
+        break;
+    }
+  }
 }
