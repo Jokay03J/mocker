@@ -85,7 +85,7 @@ Future<Alfred> startServer() async {
       final bodyFinal = {...data!, ...body};
       await box.write(id, bodyFinal);
       await res.json({'id': id, ...bodyFinal});
-    }, middleware: [(req, res) => validate(req, res, modelNames[index])]);
+    });
 
     app.delete('/${modelNames[index]}/:id', (req, res) async {
       final id = req.params['id'];
