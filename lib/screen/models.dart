@@ -63,92 +63,95 @@ class _ModelsScreenState extends State<ModelsScreen> {
               },
               child: const Text('Serveur'))
         ]),
-        body: Column(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Text(
-              'Modèles',
-              style: headerStyle,
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            Input(
-              label: 'Nom',
-              controller: newModelController,
-              validator: (value) {
-                if (value!.isEmpty) return 'Le nom du modèle est obligatoire !';
-                return null;
-              },
-              onSubmit: (modelName) async {
-                final box = GetStorage();
-                await box.write(modelName!, {});
-                if (!context.mounted) return;
-                context.push('/model/$modelName');
-              },
-            ),
-            const SizedBox(
-              height: 5,
-            ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                DangerPrimaryButton(
-                  icon: LucideIcons.eraser,
-                  onPress: () {
-                    final box = GetStorage();
-                    box.erase();
-                  },
-                  child: const Text('Tout supprimé'),
-                ),
-                const SizedBox(
-                  height: 2.5,
-                ),
-                BrandPrimaryButton(
-                    onPress: () async {
-                      var picker = await FilePicker.platform.pickFiles(
-                          type: FileType.custom,
-                          allowedExtensions: ['json'],
-                          dialogTitle: 'Select an model file');
-                      if (picker != null) {
-                        final file = File(picker.files.first.path!);
-                        final rawContent = await file.readAsString();
-                        final Map modelContent = jsonDecode(rawContent);
-                        final modelName =
-                            picker.files.single.name.split('.')[0];
-                        final box = GetStorage();
-                        box.write(modelName, modelContent);
-                      }
+        body: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Text(
+                'Modèles',
+                style: headerStyle,
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Input(
+                label: 'Nom',
+                controller: newModelController,
+                validator: (value) {
+                  if (value!.isEmpty)
+                    return 'Le nom du modèle est obligatoire !';
+                  return null;
+                },
+                onSubmit: (modelName) async {
+                  final box = GetStorage();
+                  await box.write(modelName!, {});
+                  if (!context.mounted) return;
+                  context.push('/model/$modelName');
+                },
+              ),
+              const SizedBox(
+                height: 5,
+              ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  DangerPrimaryButton(
+                    icon: LucideIcons.eraser,
+                    onPress: () {
+                      final box = GetStorage();
+                      box.erase();
                     },
-                    icon: LucideIcons.upload,
-                    child: const Text('Importer'))
-              ],
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (var index = 0;
-                    index < modelsNamesSaved.length;
-                    index++) ...[
-                  FilledCard(
-                    title: modelsNamesSaved[index],
-                    actions: [
-                      BrandPrimaryButton(
-                          icon: LucideIcons.edit,
-                          onPress: () {
-                            context.push('/model/${modelsNamesSaved[index]}');
-                          },
-                          child: const Text('Modifier')),
-                    ],
-                  )
-                ]
-              ],
-            )
-          ],
+                    child: const Text('Tout supprimé'),
+                  ),
+                  const SizedBox(
+                    height: 2.5,
+                  ),
+                  BrandPrimaryButton(
+                      onPress: () async {
+                        var picker = await FilePicker.platform.pickFiles(
+                            type: FileType.custom,
+                            allowedExtensions: ['json'],
+                            dialogTitle: 'Select an model file');
+                        if (picker != null) {
+                          final file = File(picker.files.first.path!);
+                          final rawContent = await file.readAsString();
+                          final Map modelContent = jsonDecode(rawContent);
+                          final modelName =
+                              picker.files.single.name.split('.')[0];
+                          final box = GetStorage();
+                          box.write(modelName, modelContent);
+                        }
+                      },
+                      icon: LucideIcons.upload,
+                      child: const Text('Importer'))
+                ],
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (var index = 0;
+                      index < modelsNamesSaved.length;
+                      index++) ...[
+                    FilledCard(
+                      title: modelsNamesSaved[index],
+                      actions: [
+                        BrandPrimaryButton(
+                            icon: LucideIcons.edit,
+                            onPress: () {
+                              context.push('/model/${modelsNamesSaved[index]}');
+                            },
+                            child: const Text('Modifier')),
+                      ],
+                    )
+                  ]
+                ],
+              )
+            ],
+          ),
         ));
   }
 }

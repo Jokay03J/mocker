@@ -59,107 +59,130 @@ class _ModelScreenState extends State<ModelScreen> {
             },
             child: const Text('Serveur'))
       ]),
-      body: Column(
-        children: [
-          Text(
-            widget.modelName,
-            style: headerStyle,
-          ),
-          const SizedBox(
-            height: 5,
-          ),
-          for (var modelProperty in data!.keys) ...[
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
             Text(
-              "$modelProperty - ${data![modelProperty]}",
-              style: bodyStyle,
+              widget.modelName,
+              style: headerStyle,
             ),
-          ],
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Input(
-                controller: newPropertyController,
-                label: 'Nouvelle propriéter',
-                onSubmit: (value) async {
-                  if (value == null || _newPropertyType == null) return;
-                  Map? tempData = data;
-                  tempData![value] = _newPropertyType;
-                  final GetStorage box = GetStorage();
-                  await box.write(value, tempData);
-                  setState(() {
-                    data = tempData;
-                  });
-                  newPropertyController.text = "";
-                },
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Le nom de la propriéter est requis';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(
-                width: 10,
-              ),
-              Select(
-                label: 'Type',
-                onSelected: (value) {
-                  if (value == null) return;
-                  setState(() {
-                    _newPropertyType = value;
-                  });
-                },
-                items: [
-                  SelectItem(name: 'Chaîne de caractère', value: 'string'),
-                  SelectItem(name: 'Nombre', value: 'number')
+            const SizedBox(
+              height: 5,
+            ),
+            for (var modelProperty in data!.keys) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "$modelProperty - ${data![modelProperty]}",
+                    style: bodyStyle,
+                  ),
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  DangerSecondaryButton(
+                      onPress: () async {
+                        final box = GetStorage();
+                        final Map<String, dynamic> modelData =
+                            box.read(widget.modelName);
+                        modelData.remove(modelProperty);
+                        await box.write(widget.modelName, modelData);
+                        setState(() {
+                          data = modelData;
+                        });
+                      },
+                      icon: LucideIcons.trash2,
+                      child: const Text('Supprimer'))
                 ],
-              )
-            ],
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          Text(
-            'Options',
-            style: subHeaderStyle,
-          ),
-          const SizedBox(
-            height: 5,
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              BrandPrimaryButton(
-                onPress: () async {
-                  final pathSaved = await FilePicker.platform.saveFile(
-                      dialogTitle: 'Export ${widget.modelName} model',
-                      fileName: '${widget.modelName}.json');
-                  if (pathSaved != null) {
-                    final rawData = jsonEncode(data);
-                    File file = File(pathSaved);
-                    await file.writeAsString(rawData);
-                    await FileSaver.instance
-                        .saveFile(name: '${widget.modelName}.json', file: file);
-                  }
-                },
-                icon: LucideIcons.folderOutput,
-                child: const Text('Exporter'),
               ),
-              const SizedBox(
-                width: 10,
-              ),
-              DangerPrimaryButton(
-                onPress: () {
-                  final box = GetStorage();
-                  box.remove(widget.modelName);
-                  context.pop();
-                },
-                icon: LucideIcons.trash2,
-                child: const Text('Supprimer'),
-              )
             ],
-          )
-        ],
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Input(
+                  controller: newPropertyController,
+                  label: 'Nouvelle propriété',
+                  onSubmit: (value) async {
+                    if (value == null || _newPropertyType == null) return;
+                    Map? tempData = data;
+                    tempData![value] = _newPropertyType;
+                    final GetStorage box = GetStorage();
+                    await box.write(widget.modelName, tempData);
+                    setState(() {
+                      data = tempData;
+                    });
+                    newPropertyController.text = "";
+                  },
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'Le nom de la propriété est requis';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                Select(
+                  label: 'Type',
+                  onSelected: (value) {
+                    if (value == null) return;
+                    setState(() {
+                      _newPropertyType = value;
+                    });
+                  },
+                  items: [
+                    SelectItem(name: 'Chaîne de caractère', value: 'string'),
+                    SelectItem(name: 'Nombre', value: 'number')
+                  ],
+                )
+              ],
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            Text(
+              'Options',
+              style: subHeaderStyle,
+            ),
+            const SizedBox(
+              height: 5,
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                BrandPrimaryButton(
+                  onPress: () async {
+                    final pathSaved = await FilePicker.platform.saveFile(
+                        dialogTitle: 'Export ${widget.modelName} model',
+                        fileName: '${widget.modelName}.json');
+                    if (pathSaved != null) {
+                      final rawData = jsonEncode(data);
+                      File file = File(pathSaved);
+                      await file.writeAsString(rawData);
+                      await FileSaver.instance.saveFile(
+                          name: '${widget.modelName}.json', file: file);
+                    }
+                  },
+                  icon: LucideIcons.folderOutput,
+                  child: const Text('Exporter'),
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                DangerPrimaryButton(
+                  onPress: () {
+                    final box = GetStorage();
+                    box.remove(widget.modelName);
+                    context.pop();
+                  },
+                  icon: LucideIcons.trash2,
+                  child: const Text('Supprimer'),
+                )
+              ],
+            )
+          ],
+        ),
       ),
     );
   }

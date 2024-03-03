@@ -51,18 +51,20 @@ class _ServerScreenState extends State<ServerScreen> {
               },
               child: const Text('Serveur'))
         ]),
-        body: Column(
-          children: [
-            BrandPrimaryButton(
-                icon: LucideIcons.power,
-                onPress: () async {
-                  await startServer();
-                },
-                child: const Text("Démarrer")),
-            for (var index = 0; index < logs.length; index++) ...[
-              Text(logs[index])
-            ]
-          ],
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              BrandPrimaryButton(
+                  icon: LucideIcons.power,
+                  onPress: () async {
+                    await startServer();
+                  },
+                  child: const Text("Démarrer")),
+              for (var index = 0; index < logs.length; index++) ...[
+                Text(logs[index])
+              ]
+            ],
+          ),
         ));
   }
 }
