@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:alfred/alfred.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:logging/logging.dart';
-import 'package:mocker/shared/types.dart';
+import 'package:mocker/core/validator.dart';
+import 'package:mocker/shared/utils.dart';
 
 Future<Alfred> startServer() async {
   final app = Alfred();
@@ -68,9 +69,13 @@ Future<Alfred> startServer() async {
     app.post('/${modelNames[index]}', (req, res) async {
       final body = await req.bodyAsJsonMap;
       final id = DateTime.now().millisecondsSinceEpoch.toString();
-      await box.write(id, body);
+      final modelBox = GetStorage();
+      final modelKeys =
+          modelBox.read<Map<String, dynamic>>(modelNames[index])!.keys.toList();
+      final data = getOnly(body, modelKeys);
+      await box.write(id, data);
       res.statusCode = 201;
-      await res.json({'id': id, ...body});
+      await res.json({'id': id, ...data});
     }, middleware: [((req, res) => validate(req, res, modelNames[index]))]);
 
     app.put('/${modelNames[index]}/:id', (req, res) async {
@@ -81,11 +86,16 @@ Future<Alfred> startServer() async {
         return;
       }
       Map? data = box.read<Map>(id);
+      final modelBox = GetStorage();
+      final modelKeys =
+          modelBox.read<Map<String, dynamic>>(modelNames[index])!.keys.toList();
       final body = await req.bodyAsJsonMap;
-      final bodyFinal = {...data!, ...body};
+      final bodyFinal = {...data!, ...getOnly(body, modelKeys)};
       await box.write(id, bodyFinal);
       await res.json({'id': id, ...bodyFinal});
-    });
+    }, middleware: [
+      (req, res) => validateOptional(req, res, modelNames[index])
+    ]);
 
     app.delete('/${modelNames[index]}/:id', (req, res) async {
       final id = req.params['id'];
@@ -110,39 +120,33 @@ FutureOr validate(HttpRequest req, HttpResponse res, String modelName) async {
         .json({'error': true, 'message': 'The model must have one property'});
   }
   final body = await req.bodyAsJsonMap;
-  final modelKeys = box.getKeys<Iterable>().toList();
   final modelData = box.read<Map<String, dynamic>>(modelName);
 
-  for (final propertyName in body.keys) {
-    // check if property name exist on model property
-    final keysExist = modelKeys.contains(propertyName);
-    if (!keysExist) {
-      res.statusCode = 400;
-      await res.json({
-        'error': true,
-        'message': "$propertyName property doesn't exist on model !"
-      });
-      break;
-    }
-    // check type body property value
-    final propertyValue = body[propertyName];
-    switch (modelData![propertyName]) {
-      case Types.number:
-        if (propertyValue is! int || propertyValue is! double) {
-          res.statusCode = 400;
-          await res.json(
-              {'error': true, 'message': '$propertyName must be a number'});
-          break;
-        }
-        break;
-      case Types.string:
-        if (propertyValue is! String) {
-          res.statusCode = 400;
-          await res.json(
-              {'error': true, 'message': '$propertyName must be a string'});
-          break;
-        }
-        break;
-    }
+  final messageError = validator(modelData!, body);
+  if (messageError != null) {
+    res.statusCode = 401;
+    await res.json({'error': true, 'message': messageError});
+  }
+}
+
+FutureOr validateOptional(
+    HttpRequest req, HttpResponse res, String modelName) async {
+  final box = GetStorage();
+  if (!box.hasData(modelName)) {
+    res.statusCode = 401;
+    await res
+        .json({'error': true, 'message': 'The model must have one property'});
+  }
+  final body = await req.bodyAsJsonMap;
+  final modelData = box.read<Map<String, dynamic>>(modelName);
+
+  for (final key in modelData!.keys) {
+    modelData[key] = modelData[key] + "?";
+  }
+
+  final messageError = validator(modelData, body);
+  if (messageError != null) {
+    res.statusCode = 401;
+    await res.json({'error': true, 'message': messageError});
   }
 }
