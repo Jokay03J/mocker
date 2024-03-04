@@ -20,3 +20,13 @@ releases:
         package:
           platform: windows
           target: zip
+  - name: build-mac
+    jobs:
+      - name: release-dmg
+        package:
+          platform: mac
+          target: dmg
+      - name: release-mac-zip
+        package:
+          platform: mac
+          target: zip
