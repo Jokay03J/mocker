@@ -19,6 +19,8 @@ Future<Alfred> startServer() async {
   log.onRecord.listen((record) {
     logs.write(DateTime.now().millisecondsSinceEpoch.toString(),
         '${record.level.name}: ${record.time}: ${record.message}');
+    // ignore: avoid_print
+    print('${record.level.name}: ${record.time}: ${record.message}');
   });
 
   // Create custom logWriter and map to logging package
@@ -70,8 +72,10 @@ Future<Alfred> startServer() async {
       final body = await req.bodyAsJsonMap;
       final id = DateTime.now().millisecondsSinceEpoch.toString();
       final modelBox = GetStorage();
-      final modelKeys =
-          modelBox.read<Map<String, dynamic>>(modelNames[index])!.keys.toList();
+      final modelKeys = modelBox
+          .read<Map<String, dynamic>?>(modelNames[index])!
+          .keys
+          .toList();
       final data = getOnly(body, modelKeys);
       await box.write(id, data);
       res.statusCode = 201;
@@ -87,8 +91,10 @@ Future<Alfred> startServer() async {
       }
       Map? data = box.read<Map>(id);
       final modelBox = GetStorage();
-      final modelKeys =
-          modelBox.read<Map<String, dynamic>>(modelNames[index])!.keys.toList();
+      final modelKeys = modelBox
+          .read<Map<String, dynamic>?>(modelNames[index])!
+          .keys
+          .toList();
       final body = await req.bodyAsJsonMap;
       final bodyFinal = {...data!, ...getOnly(body, modelKeys)};
       await box.write(id, bodyFinal);
@@ -120,7 +126,7 @@ FutureOr validate(HttpRequest req, HttpResponse res, String modelName) async {
         .json({'error': true, 'message': 'The model must have one property'});
   }
   final body = await req.bodyAsJsonMap;
-  final modelData = box.read<Map<String, dynamic>>(modelName);
+  final modelData = box.read<Map<String, dynamic>?>(modelName);
 
   final messageError = validator(modelData!, body);
   if (messageError != null) {
@@ -138,7 +144,7 @@ FutureOr validateOptional(
         .json({'error': true, 'message': 'The model must have one property'});
   }
   final body = await req.bodyAsJsonMap;
-  final modelData = box.read<Map<String, dynamic>>(modelName);
+  final modelData = box.read<Map<String, dynamic>?>(modelName);
 
   for (final key in modelData!.keys) {
     modelData[key] = modelData[key] + "?";
