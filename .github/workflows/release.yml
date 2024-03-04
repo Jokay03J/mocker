@@ -47,3 +47,20 @@ jobs:
         with:
           name: mocker_windows_x64_setup.exe
           path: ./dist/**/*-windows-setup.exe
+  release-mac:
+    name: Build Mac app
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+    - run: npm install -g appdmg 
+    - uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.19.x'
+        channel: 'stable'
+        cache: true
+    - run: flutter --version
+    - run: dart pub global activate flutter_distributor
+    - run: flutter_distributor release --name build-mac
