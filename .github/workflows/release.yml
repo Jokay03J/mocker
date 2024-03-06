@@ -62,5 +62,6 @@ jobs:
         channel: 'stable'
         cache: true
     - run: flutter --version
+    - run: flutter build macos
     - run: dart pub global activate flutter_distributor
     - run: flutter_distributor release --name build-mac
